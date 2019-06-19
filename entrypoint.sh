@@ -42,7 +42,7 @@ else
     initialize_superset
 
     celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair &
-    #celery worker --app=superset.tasks.celery_app:app --pool=prefork -Ofair -c 4 &
+    celery worker --app=superset.tasks.celery_app:app --pool=prefork -Ofair -c 4 &
     celery beat --app=superset.tasks.celery_app:app &
     geckodriver --host 0.0.0.0 --port 8080 &
 
