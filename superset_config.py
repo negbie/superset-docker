@@ -19,6 +19,8 @@ POSTGRES_DB = envvar('POSTGRES_DB')
 # The SQLAlchemy connection string.
 SQLALCHEMY_DATABASE_URI = f'postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}'
 
+ENABLE_SCHEDULED_EMAIL_REPORTS = True
+
 REDIS_HOST = envvar('REDIS_HOST')
 REDIS_PORT = envvar('REDIS_PORT')
 
@@ -28,7 +30,6 @@ CACHE_CONFIG = {
     'CACHE_KEY_PREFIX': 'superset_results',
     'CACHE_REDIS_URL': f'redis://{REDIS_HOST}:{REDIS_PORT}/0',
 }
-
 
 class CeleryConfig(object):
     BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
