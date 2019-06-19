@@ -45,6 +45,10 @@ services:
       - 8088:8088
     networks:
       - superset
+    volumes:
+      - ./superset_config.py:/usr/app/superset/superset/superset_config.py
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
       - postgres
       - redis
