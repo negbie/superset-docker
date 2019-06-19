@@ -1,8 +1,8 @@
-FROM node:10.16.0-stretch as assets-builder
+FROM node:12.4.0-stretch as assets-builder
 
 ENV SUPERSET_REPO_ORG         apache
 ENV SUPERSET_REPO_NAME        incubator-superset
-ENV SUPERSET_VERSION          0.33.0rc1
+ENV SUPERSET_VERSION          0.32.0rc2
 ENV SUPERSET_ARCHIVE_URL      https://github.com/${SUPERSET_REPO_ORG}/${SUPERSET_REPO_NAME}/archive/${SUPERSET_VERSION}.tar.gz
 ENV SUPERSET_ASSETS_DIST_PATH /superset-assets-dist
 
@@ -14,7 +14,6 @@ RUN curl -sL ${SUPERSET_ARCHIVE_URL} | tar zx \
  && mv dist /superset-assets-dist \
  && cd / \
  && rm -rf ${SUPERSET_REPO_NAME}-${SUPERSET_VERSION}
-
 
 FROM python:3.6-stretch
 
