@@ -1,5 +1,33 @@
 #!/usr/bin/env bash
 
+# function to initialize apache-superset
+initialize_superset () {
+    USER_COUNT=$(fabmanager list-users --app superset | awk '/email/ {print}' | wc -l)
+    if [ "$?" ==  0 ] && [ $USER_COUNT == 0 ]; then
+        # Create an admin user (you will be prompted to set username, first and last name before setting a password)
+
+        fabmanager create-admin --username superset \
+          --firstname superset \
+          --lastname apache \
+          --email superset@gunosy.com \
+          --password superset \
+          --app superset
+
+        # Initialize the database
+        superset db upgrade
+
+        # Load some data to play with
+        #superset load_examples
+
+        # Create default roles and permissions
+        superset init
+
+        echo Initialized Apache-Superset. Happy Superset Exploration!
+    else
+        echo Apache-Superset Already Initialized.
+    fi
+}
+
 if [ "$#" -ne 0 ]; then
     exec "$@"
 else
@@ -10,18 +38,11 @@ else
     done
 
     set -ex
-    fabmanager create-admin --username superset \
-        --firstname superset \
-        --lastname apache \
-        --email superset@gunosy.com \
-        --password superset \
-        --app superset
-    superset db upgrade
-    # superset load_examples
-    superset init
-    
-    #celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair &
-    celery worker --app=superset.tasks.celery_app:app --pool=prefork -Ofair -c 4 &
+   
+    initialize_superset
+
+    celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair &
+    #celery worker --app=superset.tasks.celery_app:app --pool=prefork -Ofair -c 4 &
     celery beat --app=superset.tasks.celery_app:app &
     geckodriver --host 0.0.0.0 --port 8080 &
 
