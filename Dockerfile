@@ -1,4 +1,4 @@
-FROM node:12.4.0-stretch as assets-builder
+FROM node:12-alpine as assets-builder
 
 ENV SUPERSET_REPO_ORG         apache
 ENV SUPERSET_REPO_NAME        incubator-superset
@@ -8,6 +8,7 @@ ENV SUPERSET_ARCHIVE_URL      https://github.com/${SUPERSET_REPO_ORG}/${SUPERSET
 ENV SUPERSET_ASSETS_DIST_PATH /superset-assets-dist
 
 WORKDIR /
+RUN apk add curl
 RUN curl -sL ${SUPERSET_ARCHIVE_URL} | tar zx \
  && cd ${SUPERSET_REPO_NAME}-${SUPERSET_VERSION}/superset/assets \
  && npm ci \
