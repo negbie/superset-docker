@@ -108,6 +108,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     # Firefox dependencies:
     libgtk-3-0 \
     libdbus-glib-1-2 \
+    libxt6 \
     bzip2 \
   && DL='https://download.mozilla.org/?product=firefox-latest-ssl&os=linux64' \
   && curl -sL "$DL" | tar -xj -C /opt \
