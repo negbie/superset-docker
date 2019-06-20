@@ -41,9 +41,8 @@ else
    
     initialize_superset
 
-    celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair &
     celery beat --app=superset.tasks.celery_app:app &
-    geckodriver --host 0.0.0.0 --port 8080 &
+    celery worker --app=superset.tasks.celery_app:app --pool=prefork --max-tasks-per-child=128 -Ofair -c 4 &
 
     gunicorn --bind  0.0.0.0:8088 \
         --workers $((2 * $(getconf _NPROCESSORS_ONLN) + 1)) \

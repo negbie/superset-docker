@@ -30,6 +30,7 @@ SMTP_PORT = 25
 SMTP_PASSWORD = 'superset'
 SMTP_MAIL_FROM = 'superset@superset.com'
 
+WEBDRIVER_BASEURL = 'http://0.0.0.0:8088/'
 ENABLE_SCHEDULED_EMAIL_REPORTS = True
 EMAIL_REPORT_FROM_ADDRESS = 'reports@superset.org'
 
@@ -64,7 +65,6 @@ class CeleryConfig(object):
             'ignore_result': True,
         },
     }
-    CELERY_TASK_PROTOCOL = 1
     CELERYBEAT_SCHEDULE = {
         'email_reports.schedule_hourly': {
             'task': 'email_reports.schedule_hourly',
