@@ -40,12 +40,14 @@ else
    
     initialize_superset
 
-    celery beat --app=superset.tasks.celery_app:app &
+    celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair -nworker1 &
+    celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair -nworker2 &
     celery worker --app=superset.tasks.celery_app:app --pool=prefork --max-tasks-per-child=128 -Ofair -c 4 &
-    celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair &
+    celery beat   --app=superset.tasks.celery_app:app &
 
     gunicorn --bind  0.0.0.0:8088 \
-        --workers $((2 * $(getconf _NPROCESSORS_ONLN) + 1)) \
+        --workers 20 \
+        --worker-class gevent \
         --timeout 60 \
         --limit-request-line 0 \
         --limit-request-field_size 0 \
