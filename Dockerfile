@@ -1,20 +1,20 @@
+# sudo docker build -t negbie/superset-docker:git .
+# sudo docker push negbie/superset-docker:git
+
 FROM node:12-alpine as assets-builder
 
-ENV SUPERSET_REPO_ORG         apache
 ENV SUPERSET_REPO_NAME        incubator-superset
-ENV SUPERSET_VERSION          0.33.0rc1
-ENV SUPERSET_ARCHIVE_URL      https://github.com/${SUPERSET_REPO_ORG}/${SUPERSET_REPO_NAME}/archive/${SUPERSET_VERSION}.tar.gz
 ENV SUPERSET_ASSETS_DIST_PATH /superset-assets-dist
 
 WORKDIR /
-RUN apk add curl
-RUN curl -sL ${SUPERSET_ARCHIVE_URL} | tar zx \
- && cd ${SUPERSET_REPO_NAME}-${SUPERSET_VERSION}/superset/assets \
+RUN apk add curl git
+RUN git clone --depth 1 -b master https://github.com/apache/incubator-superset \
+ && cd ${SUPERSET_REPO_NAME}/superset/assets \
  && npm ci \
  && npm run build \
  && mv dist /superset-assets-dist \
  && cd / \
- && rm -rf ${SUPERSET_REPO_NAME}-${SUPERSET_VERSION}
+ && rm -rf ${SUPERSET_REPO_NAME}
 
 FROM python:3.6-stretch
 
@@ -29,13 +29,7 @@ ENV SUPERSET_GROUP   ${SUPERSET_USER}
 ENV SUPERSET_GID     ${SUPERSET_UID}
 ENV SUPERSET_SHELL   /bin/bash
 
-# superset details
-ENV SUPERSET_REPO_ORG         apache
-ENV SUPERSET_REPO_NAME        incubator-superset
-ENV SUPERSET_VERSION          0.33.0rc1
-ENV SUPERSET_ARCHIVE_URL      https://github.com/${SUPERSET_REPO_ORG}/${SUPERSET_REPO_NAME}/archive/${SUPERSET_VERSION}.tar.gz
-ENV SUPERSET_SOURCE_PATH      ${SUPERSET_HOME}/${SUPERSET_REPO_NAME}-${SUPERSET_VERSION}
-ENV SUPERSET_APP_PATH         ${SUPERSET_SOURCE_PATH}/superset
+ENV SUPERSET_APP_PATH         ${SUPERSET_HOME}/superset
 ENV SUPERSET_ASSETS_PATH      ${SUPERSET_APP_PATH}/assets
 ENV PATH                      ${SUPERSET_APP_PATH}/bin:${PATH}
 ENV PYTHONPATH                ${SUPERSET_APP_PATH}:${PYTHONPATH}
@@ -70,6 +64,7 @@ RUN set -ex \
         $buildDeps \
         apt-utils \
         curl \
+        git \
         locales \
         postgresql-client \
         redis-tools \
@@ -77,7 +72,7 @@ RUN set -ex \
  && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
  && locale-gen \
  && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
- && mkdir -p $(dirname ${SUPERSET_HOME}) \
+ && git clone --depth 1 -b master https://github.com/apache/incubator-superset ${SUPERSET_HOME} \
  && groupadd -r -g ${SUPERSET_GID} ${SUPERSET_GROUP} \
  && useradd -r -m -N \
         -d ${SUPERSET_HOME} \
@@ -85,8 +80,7 @@ RUN set -ex \
         -s ${SUPERSET_SHELL} \
         -u ${SUPERSET_UID} \
         ${SUPERSET_USER} \
- && curl -sL ${SUPERSET_ARCHIVE_URL} | tar zx -C ${SUPERSET_HOME} \
- && pip install --no-cache-dir -r requirements-extras.txt -r ${SUPERSET_SOURCE_PATH}/requirements.txt \
+ && pip install --no-cache-dir -r requirements-extras.txt -r ${SUPERSET_HOME}/requirements.txt \
  && apt-get remove --purge -yqq $buildDeps \
  && apt-get clean \
  && rm -rf \
@@ -97,7 +91,7 @@ RUN set -ex \
         /usr/share/doc \
         /usr/share/doc-base \
  && mv ${SUPERSET_ASSETS_DIST_PATH} ${SUPERSET_ASSETS_PATH}/dist \
- && chown ${SUPERSET_USER}:${SUPERSET_GROUP} -R ${SUPERSET_SOURCE_PATH}
+ && chown ${SUPERSET_USER}:${SUPERSET_GROUP} -R ${SUPERSET_HOME}
 
  # Install the latest version of Firefox:
 RUN export DEBIAN_FRONTEND=noninteractive \
@@ -112,8 +106,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
   && curl -sL "$DL" | tar -xj -C /opt \
   && ln -s /opt/firefox/firefox /usr/local/bin/ \
   # Remove obsolete files:
-  && apt-get autoremove --purge -y \
-    bzip2 \
+  && apt-get autoremove --purge -y bzip2 \
   && apt-get clean \
   && rm -rf \
     /tmp/* \
@@ -128,10 +121,10 @@ RUN BASE_URL=https://github.com/mozilla/geckodriver/releases/download \
     https://api.github.com/repos/mozilla/geckodriver/releases/latest | \
     grep tag_name | cut -d '"' -f 4) \
   && curl -sL "$BASE_URL/$VERSION/geckodriver-$VERSION-linux64.tar.gz" | \
-tar -xz -C /usr/local/bin
+  tar -xz -C /usr/local/bin
 
 USER       ${SUPERSET_USER}
-WORKDIR    ${SUPERSET_SOURCE_PATH}
+WORKDIR    ${SUPERSET_HOME}
 
 COPY       superset_config.py ${SUPERSET_APP_PATH}
 COPY       entrypoint.sh .

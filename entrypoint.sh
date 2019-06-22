@@ -2,16 +2,15 @@
 
 # function to initialize apache-superset
 initialize_superset () {
-    USER_COUNT=$(fabmanager list-users --app superset | awk '/email/ {print}' | wc -l)
+    USER_COUNT=$(flask fab list-users | awk '/email/ {print}' | wc -l)
     if [ "$?" ==  0 ] && [ $USER_COUNT == 0 ]; then
         # Create an admin user (you will be prompted to set username, first and last name before setting a password)
 
-        fabmanager create-admin --username superset \
-          --firstname superset \
-          --lastname apache \
-          --email superset@gunosy.com \
-          --password superset \
-          --app superset
+        flask fab create-admin --username superset \
+          --firstname apache \
+          --lastname superset \
+          --email superset@superset.com \
+          --password superset
 
         # Initialize the database
         superset db upgrade
@@ -43,6 +42,7 @@ else
 
     celery beat --app=superset.tasks.celery_app:app &
     celery worker --app=superset.tasks.celery_app:app --pool=prefork --max-tasks-per-child=128 -Ofair -c 4 &
+    celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair &
 
     gunicorn --bind  0.0.0.0:8088 \
         --workers $((2 * $(getconf _NPROCESSORS_ONLN) + 1)) \
