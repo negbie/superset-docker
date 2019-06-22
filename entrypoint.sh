@@ -40,8 +40,11 @@ else
    
     initialize_superset
 
+    rm -f /usr/app/superset/celerybeat.pid
     celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair -nworker1 &
     celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair -nworker2 &
+    celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair -nworker3 &
+    celery worker --app=superset.sql_lab:celery_app --pool=gevent -Ofair -nworker4 &
     celery worker --app=superset.tasks.celery_app:app --pool=prefork --max-tasks-per-child=128 -Ofair -c 4 &
     celery beat   --app=superset.tasks.celery_app:app &
 
