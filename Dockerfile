@@ -80,8 +80,8 @@ RUN set -ex \
         -s ${SUPERSET_SHELL} \
         -u ${SUPERSET_UID} \
         ${SUPERSET_USER} \
- && sed -i 's/^sqlalchemy-utils==0.33.11$/sqlalchemy-utils==0.34.0/g' ${SUPERSET_HOME}/requirements.txt \
- && pip install --no-cache-dir -r requirements-extras.txt -r ${SUPERSET_HOME}/requirements.txt \
+ && pip install --no-cache-dir -r ${SUPERSET_HOME}/requirements-dev.txt -r ${SUPERSET_HOME}/requirements.txt \
+ && pip install --no-cache-dir -r requirements-extras.txt \
  && apt-get remove --purge -yqq $buildDeps \
  && apt-get clean \
  && rm -rf \
